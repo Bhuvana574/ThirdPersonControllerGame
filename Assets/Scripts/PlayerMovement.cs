@@ -18,10 +18,17 @@ public class PlayerMovement : MonoBehaviour
     private AudioSource audioSource;
     [SerializeField]
     private AudioClip[] audioClip;
-    
+    [SerializeField]
+    private int currentAmmo;
+    private int maxAmmo = 50;
+    private bool isReloading = false;
+    private UIManager uIManager;
+    public bool hasCoin=false;
+    [SerializeField]
+    private GameObject weapon;
     public static PlayerMovement instance;
 
-    public int bulletCount = 50;
+   
 
     private void Awake()
     {
@@ -30,8 +37,10 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        currentAmmo = maxAmmo;
         audioSource = GameObject.Find("SoundManager").GetComponent<AudioSource>();
         character = GetComponent<CharacterController>();
+        uIManager = GameObject.Find("UIManager").GetComponent<UIManager>();
     }
 
     // Update is called once per frame
@@ -43,6 +52,10 @@ public class PlayerMovement : MonoBehaviour
             if (Input.GetMouseButton(0))
             {
 
+                if(currentAmmo>0)
+                {
+                    Shoot();
+                }
                 timer = 0f;
                 Shoot();
                 audioSource.clip = audioClip[0];
@@ -53,7 +66,14 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 muzzlePrfeab.SetActive(false);
-                
+                audioSource.clip = audioClip[1];
+                audioSource.Play();
+                audioSource.loop = true;
+            }
+            if(Input.GetKeyDown(KeyCode.R) &&  isReloading==false)
+            {
+                isReloading = true;
+                StartCoroutine(Reload());
             }
         }
         Movement();
@@ -66,16 +86,17 @@ public class PlayerMovement : MonoBehaviour
     private void Shoot()
     {
         muzzlePrfeab.SetActive(true);
+        currentAmmo--;
+        uIManager.UpdateAmmo(currentAmmo);
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             Debug.Log("raycast got hit" + hit.transform.name);
-            ObjectPooling.instance.AddParticleEffect(hitMarketPrefab);
-            ObjectPooling.instance.Spawning(hit);
-            audioSource.clip = audioClip[1];
-            audioSource.Play();
-            audioSource.loop = true;
+            HitPool.instance.AddParticleEffect(hitMarketPrefab);
+            HitPool.instance.Spawning(hit);
+            
+            
             //  GameObject temp = (GameObject)Instantiate(hitMarketPrefab, hit.point, Quaternion.LookRotation(hit.normal));
             //  Destroy(temp, 2.0f);
 
@@ -90,5 +111,16 @@ public class PlayerMovement : MonoBehaviour
         velocity.y -= gravity;
         velocity = transform.transform.TransformDirection(velocity);
         character.Move(velocity * Time.deltaTime);
+    }
+    //reload bullets
+    IEnumerator Reload()
+    {
+        yield return new WaitForSeconds(1f);
+        currentAmmo = maxAmmo;
+        isReloading = false;
+    }
+    public void EnableWeapon()
+    {
+        weapon.SetActive(true);
     }
 }

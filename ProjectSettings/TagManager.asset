@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Hitm
+  - ParticleEffect
   layers:
   - Default
   - TransparentFX
