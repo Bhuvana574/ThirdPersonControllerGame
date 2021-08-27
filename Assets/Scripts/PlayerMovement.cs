@@ -95,7 +95,12 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("raycast got hit" + hit.transform.name);
             HitPool.instance.AddParticleEffect(hitMarketPrefab);
             HitPool.instance.Spawning(hit);
-            
+            //check if we hit crate then destroy crate
+            Destructable crate = hit.transform.GetComponent<Destructable>();
+            if(crate!=null)
+            {
+                crate.OnCrateDestroyed();
+            }
             
             //  GameObject temp = (GameObject)Instantiate(hitMarketPrefab, hit.point, Quaternion.LookRotation(hit.normal));
             //  Destroy(temp, 2.0f);
